@@ -1,0 +1,136 @@
+// Copyright 2024 shaneborden
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//     https://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+-- For PostgreSQL Found at:
+--     http://www.if-not-true-then-false.com/2009/postgresql-psql-psqlrc-tips-and-tricks/
+--     http://opensourcedbms.com/dbms/psqlrc-psql-startup-file-for-postgres/
+
+-- Added AlloyDB specific views primarily around columnar cache, extensions and core AllyDB features.
+
+\set QUIET ON
+
+\pset pager on
+
+\pset null 'NULL'
+
+\set HISTSIZE 50000
+
+\timing
+
+\set PROMPT1 '(%n@%M:%>) [%/] > '
+\set PROMPT2 ''
+
+
+\set QUIET OFF
+
+\echo '\nCurrent Host Server Date Time : '`date` '\n'
+
+\echo 'Administrative queries:\n'
+\echo '\t\t\t:settings\t-- Server Settings'
+\echo '\t\t\t:conninfo\t-- Server connections'
+\echo '\t\t\t:activity\t-- Server activity'
+\echo '\t\t\t:locks\t\t-- Lock info'
+\echo '\t\t\t:waits\t\t-- Waiting queires'
+\echo '\t\t\t:dbsize\t\t-- Database Size'
+\echo '\t\t\t:tablesize\t-- Tables Size'
+\echo '\t\t\t:uptime\t\t-- Server uptime'
+\echo '\t\t\t:usropts\t-- User Settings and Options'
+\echo '\t\t\t:gt\t\t-- Google Columnar Cache Table'
+\echo '\t\t\t:gc\t\t-- Google Columnar Cache Columns'
+\echo '\t\t\t:ac\t\t-- AlloyDB Specific Parameters'
+\echo '\t\t\t:gcolc\t\t-- Google Columnar Engine Specific Parameters'
+\echo '\t\t\t:gi\t\t-- Google Index Advisory Recommend'
+\echo '\t\t\t:reset\t\t-- Reset Table set for Google Columnar Engine'
+\echo '\t\t\t:set\t\t-- Set Table set for Google Columnar Engine as per input'
+\echo '\t\t\t:ext\t\t-- Extension Enable and installed'
+\echo '\t\t\t:aext\t\t-- Available Extension'
+\echo '\t\t\t:gext\t\t-- Available Google Cloud AlloyDB Extensions'
+\echo '\t\t\t:gcmem\t\t-- Google Cloud Columnar Memory'
+\echo '\t\t\t:gcmemusage\t-- Google Cloud Columnar Memory Usage - internal'
+\echo '\t\t\t:gunit\t\t-- Google Columnar Block units'
+\echo '\t\t\t:menu\t\t-- Help Menu'
+\echo '\t\t\t\\h\t\t-- Help with SQL commands'
+\echo '\t\t\t\\?\t\t-- Help with psql commands\n'
+
+\echo 'Development queries:\n'
+\echo '\t\t\t:sp\t\t-- Current Search Path'
+\echo '\t\t\t:clear\t\t-- Clear screen'
+
+-- Administration queries
+
+\set menu '\\i ~/.psqlrc'
+
+\set settings 'select name, setting,unit,context from pg_settings;'
+
+\set locks  'SELECT bl.pid AS blocked_pid, a.usename AS blocked_user, kl.pid AS blocking_pid, ka.usename AS blocking_user, a.query AS blocked_statement FROM pg_catalog.pg_locks bl JOIN pg_catalog.pg_stat_activity a ON bl.pid = a.pid JOIN pg_catalog.pg_locks kl JOIN pg_catalog.pg_stat_activity ka ON kl.pid = ka.pid ON bl.transactionid = kl.transactionid AND bl.pid != kl.pid WHERE NOT bl.granted;'
+
+\set conninfo 'select usename, count(*) from pg_stat_activity group by usename;'
+
+\set activity 'select datname, pid, usename, application_name,client_addr, client_hostname, client_port, query, state from pg_stat_activity;'
+
+\set waits 'SELECT pg_stat_activity.pid, pg_stat_activity.query, pg_stat_activity.waiting, now() - pg_stat_activity.query_start AS \"totaltime\", pg_stat_activity.backend_start FROM pg_stat_activity WHERE pg_stat_activity.query !~ \'%IDLE%\'::text AND pg_stat_activity.waiting = true;'
+
+\set dbsize 'SELECT datname, pg_size_pretty(pg_database_size(datname)) db_size FROM pg_database ORDER BY db_size;'
+
+\set tablesize 'SELECT nspname || \'.\' || relname AS \"relation\", pg_size_pretty(pg_relation_size(C.oid)) AS "size" FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) WHERE nspname NOT IN (\'pg_catalog\', \'information_schema\') ORDER BY pg_relation_size(C.oid) DESC LIMIT 40;'
+
+\set uptime 'select now() - pg_postmaster_start_time() AS uptime;'
+
+\set gt 'SELECT n.nspname as \"Schema\",c.relname as \"Name\",CASE c.relkind WHEN \'r\' THEN \'table\' WHEN \'v\' THEN \'view\' WHEN \'m\' THEN \'materialized view\' WHEN \'i\' THEN \'index\' WHEN \'S\' THEN \'sequence\' WHEN \'t\' THEN \'TOAST table\' WHEN \'f\' THEN \'foreign table\' WHEN \'p\' THEN \'partitioned table\' WHEN \'I\' THEN \'partitioned index\' END as \"Type\",pg_catalog.pg_get_userbyid(c.relowner) as \"Owner\", CASE c.relpersistence WHEN \'p\' THEN \'permanent\' WHEN \'t\' THEN \'temporary\' WHEN \'u\' THEN \'unlogged\' END as \"Persistence\", pg_catalog.pg_size_pretty(pg_catalog.pg_table_size(c.oid)) as \"Size\", gcol.status as \"ColumnarCache\", pg_catalog.pg_size_pretty(gcol.size) as \"ColCacheSizeMB\", pg_catalog.obj_description(c.oid, \'pg_class\') as \"Description\" FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace LEFT JOIN pg_catalog.pg_am am ON am.oid = c.relam  INNER JOIN g_columnar_relations gcol on gcol.schema_name = n.nspname and gcol.relation_name = c.relname  AND gcol.status = \'Usable\' WHERE c.relkind IN (\'r\',\'p\',\'\') AND n.nspname <> \'pg_catalog\' AND n.nspname !~ \'^pg_toast\' AND n.nspname <> \'information_schema\'  AND pg_catalog.pg_table_is_visible(c.oid) and gcol.database_name = current_database() ORDER BY 1,2;'
+
+\set gt_ 'SELECT n.nspname as \"Schema\",c.relname as \"Name\", pg_catalog.pg_size_pretty(pg_catalog.pg_table_size(c.oid)) as \"Size\", gcol.status as \"ColumnarCache\", pg_catalog.pg_size_pretty(gcol.size) as \"ColCacheSizeMB\", gcol.columnar_unit_count ,total_block_count , block_count_in_cc ,invalid_block_count ,round(100 * invalid_block_count/total_block_count,1) as invalid_block_cnt_perc , auto_refresh_trigger_count as auto_refresh_cnt , auto_refresh_failure_count as auto_refresh_failcnt    FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace LEFT JOIN pg_catalog.pg_am am ON am.oid = c.relam  INNER JOIN g_columnar_relations gcol on gcol.schema_name = n.nspname and gcol.relation_name = c.relname  AND gcol.status = \'Usable\' WHERE c.relkind IN (\'r\',\'p\',\'\') AND n.nspname <> \'pg_catalog\' AND n.nspname !~ \'^pg_toast\' AND n.nspname <> \'information_schema\'  AND pg_catalog.pg_table_is_visible(c.oid) and gcol.database_name = current_database() ORDER BY 1,5;'
+
+\set reset '\\set gctabs %'
+
+\set set '\\set gctabs'
+
+\set gc 'SELECT gcols.relation_name as \"TableName\", a.attname,pg_catalog.format_type(a.atttypid, a.atttypmod),(SELECT pg_catalog.pg_get_expr(d.adbin, d.adrelid, true)FROM pg_catalog.pg_attrdef d WHERE d.adrelid = a.attrelid AND d.adnum = a.attnum AND a.atthasdef), a.attnotnull,gcols.status as \"ColumnarCache\",round(gcols.size_in_bytes/1024/1024,2) as \"ColCacheSizeMB\" FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace left join pg_catalog.pg_attribute a on a.attrelid = c.oid INNER JOIN g_columnar_columns gcols on gcols.schema_name = n.nspname and gcols.relation_name = c.relname AND gcols.status = \'Usable\' and gcols.column_name = a.attname WHERE gcols.relation_name like :\'gctabs\' and pg_catalog.pg_table_is_visible(c.oid) AND a.attnum > 0 AND NOT a.attisdropped AND  gcols.database_name = current_database() ORDER BY a.attnum;'
+
+\set gc_ 'SELECT gcols.relation_name as \"TableName\", a.attname,pg_catalog.format_type(a.atttypid, a.atttypmod), a.attnotnull,gcols.status as \"ColumnarCache\",round(gcols.size_in_bytes/1024/1024,2) as \"ColCacheSizeMB\" , round(gcols.uncompressed_size_in_bytes/1024/1024,2) as \"UnCmprsdColCacheSizeMB\" , last_accessed_time , num_times_accessed FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace left join pg_catalog.pg_attribute a on a.attrelid = c.oid INNER JOIN g_columnar_columns gcols on gcols.schema_name = n.nspname and gcols.relation_name = c.relname AND gcols.status = \'Usable\' and gcols.column_name = a.attname WHERE gcols.relation_name like :\'gctabs\' and pg_catalog.pg_table_is_visible(c.oid) AND a.attnum > 0 AND NOT a.attisdropped AND  gcols.database_name = current_database() ORDER BY a.attnum;'
+
+\set ac 'SELECT s.name AS \"Parameter\", pg_catalog.current_setting(s.name) AS \"Value\" FROM pg_catalog.pg_settings s WHERE pg_catalog.lower(s.name) OPERATOR(pg_catalog.~) \'^(alloydb.*)$\' COLLATE pg_catalog.default ORDER BY 1;'
+
+\set gcolc 'SELECT s.name AS \"Parameter\", pg_catalog.current_setting(s.name) AS \"Value\" FROM pg_catalog.pg_settings s WHERE pg_catalog.lower(s.name) OPERATOR(pg_catalog.~) \'^(google_columnar_engine..*)$\' COLLATE pg_catalog.default ORDER BY 1;'
+
+\set gidxc 'SELECT s.name AS \"Parameter\", pg_catalog.current_setting(s.name) AS \"Value\" FROM pg_catalog.pg_settings s WHERE pg_catalog.lower(s.name) OPERATOR(pg_catalog.~) \'^(google_db_advisor..*)$\' COLLATE pg_catalog.default ORDER BY 1;'
+
+\set gi 'select * from google_db_advisor_recommend_indexes();'
+
+\set ef 'SELECT s.name AS \"Parameter\", pg_catalog.current_setting(s.name) AS \"Value\" FROM pg_catalog.pg_settings s WHERE pg_catalog.lower(s.name) OPERATOR(pg_catalog.~) \'^(.*.enable.*)$\' COLLATE pg_catalog.default and setting =\'on\' ORDER BY 1;'
+
+--Available Extensions
+\set ext 'SELECT e.extname AS \"Name\", e.extversion AS \"Version\", n.nspname AS \"Schema\" FROM pg_catalog.pg_extension e LEFT JOIN pg_catalog.pg_namespace n ON n.oid = e.extnamespace LEFT JOIN pg_catalog.pg_description c ON c.objoid = e.oid AND c.classoid = \'pg_catalog.pg_extension\' :: pg_catalog.regclass ORDER BY 1;'
+
+
+\set gext 'SELECT name,default_version,installed_version from pg_catalog.pg_available_extensions where lower(name) like \'%google%\';'
+
+\set aext 'SELECT name,default_version,installed_version from pg_catalog.pg_available_extensions;'
+
+\set gcmem 'select  pg_size_pretty(memory_total) as cc_memory_total , pg_size_pretty(memory_total-memory_available) as cc_memory_consume,pg_size_pretty(memory_available) cc_memory_available, pg_size_pretty(google_columnar_engine_local_storage_used()) as cc_local_storage_used, pg_size_pretty(google_columnar_engine_local_storage_available()) as available_local_storage from g_columnar_memory_usage where memory_name = \'main_pool\';'
+
+\set gcmemusage 'select memory_name , memory_total/1024/1024 memory_total_MB, memory_available/1024/1024 memory_available_MB , memory_available_percentage from g_columnar_memory_usage;'
+
+\set gcunit 'select schema_name, relation_name, status, swap_status, sum(end_block - start_block) ttl_block, sum(invalid_block_count) invalid_block, round( 100 * sum(invalid_block_count) / sum(end_block - start_block), 1 ) as invalid_block_perc, pg_size_pretty(sum(size)) ttl_size, pg_size_pretty(sum(cached_size_bytes)) ttl_cached_size from g_columnar_units where g_columnar_units.database_name = current_database() group by schema_name, relation_name, status, swap_status;'
+
+\set gconf 'SELECT s.name AS \"Parameter\", pg_catalog.current_setting(s.name) AS \"Value\" FROM pg_catalog.pg_settings s WHERE s.source <> \'default\' AND s.setting IS DISTINCT FROM s.boot_val AND lower(s.name) like \'%google%\'  ORDER BY 1;'
+
+\set usropts 'SELECT coalesce(role.rolname, \'database wide\') as role, coalesce(db.datname, \'cluster wide\') as database, setconfig as user_options FROM pg_db_role_setting role_setting LEFT JOIN pg_roles role ON role.oid = role_setting.setrole LEFT JOIN pg_database db ON db.oid = role_setting.setdatabase;'
+
+-- Development queries:
+\set sp 'SHOW search_path;'
+\set clear '\\! clear;'
+\set ea 'explain analyze'
+\set eab 'explain (analyze,buffers)'
+\set eall 'explain (analyze, costs, verbose, buffers, settings, wal, timing, summary, format text)'
+:reset
