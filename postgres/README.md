@@ -1,5 +1,7 @@
 # Postgres SQL Scripts - Shorthand Commands from PSQL
 
+[//]: # (Original Layout for this Readme.md was from https://gist.github.com/apolloclark)
+
 ## Use of .psqlrc
 The .psqlrc file allows you to configure personalized settings, add shortcuts and add custom commands.  It is stored in the users home directory and will automatically be read upon launch of `psql`.
 
