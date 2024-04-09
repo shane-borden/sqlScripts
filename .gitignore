@@ -1,0 +1,31 @@
+
+# C extensions
+*.so
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Environments
+.env*
+!.env.example
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv
+service_account.json
+
+# osx
+.ds_store
+.DS_Store
+
+# vscode
+# .vscode
+
+# App specifics
+.env
