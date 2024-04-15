@@ -18,6 +18,8 @@ jobs:
             BUMPVERSION="$(grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)"
             echo "release_tag=v$BUMPVERSION" >> $GITHUB_ENV
         id: tag
+      - name: Build SQL Scripts Assets
+        run: make build
       - name: Create release
         id: create_release
         uses: softprops/action-gh-release@v2
@@ -27,37 +29,11 @@ jobs:
           tag_name: ${{ env.RELEASE_TAG }}
           name: ${{ env.RELEASE_VERSION }}
           body_path: CHANGELOG.md
+          files: |
+            ./dist/sql-scripts-oracle.zip
+            ./dist/sql-scripts-sqlserver.zip
+            ./dist/sql-scripts-postgres.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ env.release_tag }}
           RELEASE_VERSION: ${{ env.release_version }}
-      - name: Build SQL Scripts Assets
-        run: make build
-      - name: upload oracle artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_UPLOAD_URL: ${{ steps.create_release.outputs.upload_url }}
-        with:
-          upload_url: ${{ env.GITHUB_UPLOAD_URL }}
-          asset_path: ./dist/sql-scripts-oracle.zip
-          asset_name: sql-scripts-oracle.zip
-          asset_content_type: application/gzip
-      - name: upload mssql artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/sql-scripts-sqlserver.zip
-          asset_name: sql-scripts-sqlserver.zip
-          asset_content_type: application/gzip
-      - name: upload postgres artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/sql-scripts-postgres.zip
-          asset_name: sql-scripts-postgres.zip
-          asset_content_type: application/zip
