@@ -49,7 +49,7 @@ clean: clean-sqlscripts      ## remove all build, testing, and static documentat
 
 .PHONY: clean-sqlscripts
 clean-sqlscripts:
-	@echo  "=> Cleaning previous build artifcats for data collector scripts..."
+	@echo  "=> Cleaning previous build artifacts for sql scripts..."
 	@rm -Rf $(BUILD_DIR)/collector/*
 
 .PHONY: build-sqlscripts

@@ -1,4 +1,4 @@
-# Postgres SQL Scripts - Shorthand Commands from PSQL
+# Postgres SQL Scripts - Shorthand Commands for PSQL
 
 [//]: # (Original Layout for this Readme.md was from https://gist.github.com/apolloclark)
 
