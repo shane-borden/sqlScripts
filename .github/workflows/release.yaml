@@ -35,10 +35,10 @@ jobs:
         id: create_release
         with:
           draft: false
-          prerelease: false
+          prerelease: true
           release_name: ${{ steps.version.outputs.version }}
           tag_name: ${{ github.ref }}
-          body_path: CHANGELOG.md
+          body_path: .bumpversion.cfg
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - name: upload oracle artifact
