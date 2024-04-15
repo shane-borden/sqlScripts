@@ -16,7 +16,7 @@ jobs:
       - name: Generate release tag
         run: |
             BUMPVERSION="$(grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)"
-            echo "name=release_tag::v$BUMPVERSION" >> $GITHUB_ENV
+            echo "release_tag=v$BUMPVERSION" >> $GITHUB_ENV
         id: tag
       - name: Create release
         id: create_release
@@ -24,7 +24,7 @@ jobs:
         with:
           draft: false
           prerelease: true
-          tag_name: ${{steps.tag.outputs.release_tag}}
+          tag_name: ${{ env.release_tag }}
           name: ${{steps.version.outputs.version}}
           body_path: CHANGELOG.md
         env:
