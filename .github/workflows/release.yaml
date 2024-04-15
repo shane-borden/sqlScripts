@@ -14,20 +14,33 @@
 
 name: release
 on:
-  release:
-    types:
-      - created
-jobs:
-  build:
-    runs-on: ubuntu-latest
+  workflow_dispatch:
 
+jobs:
+  build_release:
+    name: build_release
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: checkout
+        uses: actions/checkout@v2
         with:
-          python-version: "3.11"
+          fetch-depth: 0
       - name: Build SQL Scripts Assets
         run: make build
+      - name: version
+        run: grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3
+        id: version
+      - name: release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: ${{ steps.version.outputs.version }}
+          tag_name: ${{ github.ref }}
+          body_path: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - name: upload oracle artifact
         uses: actions/upload-release-asset@v1
         env:
