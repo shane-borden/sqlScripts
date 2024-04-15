@@ -8,7 +8,7 @@ These scripts have been collected and modified to help diagnose and expose metad
 This SQL Script Toolkit is a "free to use" script (Covered by the Apache 2.0 License) 
 that collects diagnostic Information from the target DBMS System.
 
-Every effort has been made to credit original authors where practical.
+Some of the scripts contained in this collection have been modified from other scripts available in the public domain.  Every effort has been made to credit original authors where practical.
 
 ## Steps
 
