@@ -1,5 +1,6 @@
 # DBMS SQL Scripts for Postgres / Oracle / SQLServer
 by Shane Borden
+
 Version 0.1.0
 
 These scripts have been collected and modified to help diagnose and expose metadata about various DBMS Products
