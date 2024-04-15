@@ -15,7 +15,8 @@ jobs:
         id: version
       - name: Generate release tag
         run: |
-            echo "::set-output name=release_tag::v$(grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)"
+            BUMPVERSION="$(grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)"
+            echo "name=release_tag::v$BUMPVERSION" >> $GITHUB_ENV
         id: tag
       - name: Create release
         id: create_release
