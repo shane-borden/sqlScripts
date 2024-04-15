@@ -8,6 +8,9 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
+# Distribution / packaging
+dist/
+
 # Environments
 .env*
 !.env.example
@@ -29,3 +32,7 @@ service_account.json
 
 # App specifics
 .env
+README.txt
+mssql/README.txt
+oracle/README.txt
+postgres/README.txt

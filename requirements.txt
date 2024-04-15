@@ -1,0 +1,5 @@
+bump2version 
+ruff
+sqlfluff
+pre-commit
+m2r
