@@ -27,7 +27,7 @@ jobs:
         run: grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3
         id: version
       - name: releasetag
-        run: echo "v"$(grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)
+        run: releasePrefix="v"; releaseNumber=$(grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3); echo "${releasePrefix}${releaseNumber}"
         id: releasetag
       - name: release
         id: create_release
