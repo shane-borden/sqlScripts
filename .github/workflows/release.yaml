@@ -7,10 +7,11 @@ jobs:
     name: build_release
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
-      - name: version
-        run: grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3
+      - name: Pull current code version
+        run: |
+            echo "::set-output name=version::Release $(grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)"
         id: version
       - name: Generate release tag
         run: |
