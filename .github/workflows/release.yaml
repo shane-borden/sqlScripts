@@ -12,16 +12,17 @@ jobs:
       - name: version
         run: grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3
         id: version
-      - name: release
-        run: releasePrefix="v"; releaseNumber=$(grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3); echo "${releasePrefix}${releaseNumber}"
-        id: release
-      - name: release
+      - name: Generate release tag
+        run: |
+            echo "::set-output name=release_tag::v$(grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)"
+        id: tag
+      - name: Create release
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
           draft: false
           prerelease: true
-          tag_name: ${{steps.release.outputs.release}}
+          tag_name: ${{steps.tag.outputs.release_tag}}
           name: ${{steps.version.outputs.version}}
           body_path: CHANGELOG.md
         env:
