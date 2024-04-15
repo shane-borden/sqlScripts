@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: version
         run: grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3
         id: version
@@ -17,12 +17,12 @@ jobs:
         id: release
       - name: release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           draft: false
           prerelease: true
-          tag_name: "${{steps.release.outputs.release}}"
-          release_name: "${{steps.version.outputs.version}}"
+          tag_name: ${{steps.release.outputs.release}}
+          name: ${{steps.version.outputs.version}}
           body_path: CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
