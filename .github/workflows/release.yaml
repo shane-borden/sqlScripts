@@ -37,7 +37,7 @@ jobs:
           draft: false
           prerelease: true
           release_name: ${{ steps.version.outputs.version }}
-          tag_name: ${{ github.ref }}
+          tag_name: v${{ steps.version.outputs.version }}
           body_path: .bumpversion.cfg
         env:
           GITHUB_TOKEN: ${{ github.token }}
