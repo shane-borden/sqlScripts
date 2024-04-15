@@ -32,7 +32,7 @@ jobs:
         id: version
       - name: generate_tag
         run: echo "v"$(grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)
-        id: release_tag
+        id: releasetag
       - name: release
         uses: actions/create-release@v1
         id: create_release
@@ -40,7 +40,7 @@ jobs:
           draft: false
           prerelease: true
           release_name: ${{ steps.version.outputs.version }}
-          tag_name: ${{ steps.generate_tag.outputs.release_tag }}
+          tag_name: ${{ steps.generate_tag.outputs.releasetag }}
           body_path: CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ github.token }}
