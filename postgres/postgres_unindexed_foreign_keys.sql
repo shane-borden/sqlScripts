@@ -21,7 +21,7 @@ WITH y AS (
         pg_catalog.quote_ident(a2.attname) AS referenced_column,
         pg_relation_size(pg_catalog.format('%I.%I', n1.nspname, c1.relname)) AS referencing_tbl_bytes,
         pg_relation_size(pg_catalog.format('%I.%I', n2.nspname, c2.relname)) AS referenced_tbl_bytes,
-        pg_catalog.format($$CREATE INDEX ON %I.%I(%I);$$, n1.nspname, c1.relname, a1.attname) AS suggestion
+        pg_catalog.format($$CREATE INDEX %I_idx ON %I.%I(%I);$$, t.conname, n1.nspname, c1.relname, a1.attname) AS suggestion
     FROM
         pg_catalog.pg_constraint t
         JOIN pg_catalog.pg_attribute a1 ON a1.attrelid = t.conrelid
