@@ -127,5 +127,12 @@ FROM (
                         AND nn.nspname <> 'information_schema'
                 LEFT JOIN pg_index i ON indrelid = cc.oid
                 LEFT JOIN pg_class c2 ON c2.oid = i.indexrelid) AS sml
+WHERE 
+ROUND((
+        CASE WHEN otta = 0 THEN
+            0.0
+        ELSE
+            sml.relpages::float / otta
+        END)::numeric, 1) > 10
 ORDER BY
     2,4,3 DESC;

@@ -20,7 +20,7 @@
 
 \set QUIET ON
 
-\pset pager on
+\pset pager off
 
 \pset null 'NULL'
 
