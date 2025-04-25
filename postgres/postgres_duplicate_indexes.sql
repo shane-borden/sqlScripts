@@ -1,4 +1,4 @@
--- Copyright 2024 shaneborden
+-- Copyright 2025 shaneborden
 -- 
 -- Licensed under the Apache License, Version 2.0 (the "License");
 -- you may not use this file except in compliance with the License.
@@ -18,7 +18,13 @@ SELECT
     (array_agg(idx))[1] AS idx1,
     (array_agg(idx))[2] AS idx2,
     (array_agg(idx))[3] AS idx3,
-    (array_agg(idx))[4] AS idx4
+    (array_agg(idx))[4] AS idx4,
+    (array_agg(idx))[5] AS idx5,
+    (array_agg(idx))[6] AS idx6,
+    (array_agg(idx))[7] AS idx7,
+    (array_agg(idx))[8] AS idx8,
+    (array_agg(idx))[9] AS idx9,
+    (array_agg(idx))[10] AS idx10
 FROM (
     SELECT
         indrelid,
