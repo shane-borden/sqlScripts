@@ -25,27 +25,18 @@ install:	 ## Install the project in dev mode.
 	.venv/bin/pip install -U wheel setuptools cython pip mypy sqlfluff && .venv/bin/pip install -U -r requirements.txt -r requirements-docs.txt
 	@echo "=> Build environment installed successfully.  ** If you want to re-install or update, 'make install'"
 
-.PHONY: clean 
-clean: clean-sqlscripts      ## remove all build, testing, and static documentation files
-	rm -fr build/
-	rm -fr dist/
-	rm -fr .eggs/
-	find . -name '*.egg-info' -exec rm -fr {} +
-	find . -name '*.egg' -exec rm -f {} +
-	find . -name '*.pyc' -exec rm -f {} +
-	find . -name '*.pyo' -exec rm -f {} +
-	find . -name '*~' -exec rm -f {} +
-	find . -name '__pycache__' -exec rm -fr {} +
-	find . -name '.ipynb_checkpoints' -exec rm -fr {} +
-	rm -fr .tox/
-	rm -fr .coverage
-	rm -fr coverage.xml
-	rm -fr coverage.json
-	rm -fr htmlcov/
-	rm -fr .pytest_cache
-	rm -fr .mypy_cache
-	rm -fr site
-	@echo "=> Source cleaned successfully"
+.PHONY: clean
+clean:                                              ## Cleanup temporary build artifacts
+	@echo "${INFO} Cleaning working directory... 🧹"
+	@rm -rf .pytest_cache .ruff_cache .hypothesis build/ dist/ .eggs/ .coverage coverage.xml coverage.json htmlcov/ .pytest_cache tests/.pytest_cache tests/**/.pytest_cache .mypy_cache .unasyncd_cache/ .auto_pytabs_cache node_modules >/dev/null 2>&1
+	@find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1
+	@find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1
+	@find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1
+	@find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1
+	@find . -name '*~' -exec rm -f {} + >/dev/null 2>&1
+	@find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1
+	@find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1
+	@echo "${OK} Working directory cleaned"
 
 .PHONY: clean-sqlscripts
 clean-sqlscripts:
@@ -59,25 +50,25 @@ build-sqlscripts: clean-sqlscripts      ## Build the collector SQL scripts.
 	@echo "=> Building SQL Helper Scripts for Oracle version $(VERSION)..."
 	python3 -c "import m2r; python_text = m2r.convert(open('oracle/README.md').read()); f = open('oracle/README.txt', 'w'); f.write(python_text); f.close()"
 	@mkdir -p $(BUILD_DIR)/oracle
-	@cp oracle/*.sql $(BUILD_DIR)/sqlscripts/oracle
-	@cp  LICENSE $(BUILD_DIR)/sqlscripts/oracle
-	echo "SQL Helper Scripts for Oracle Database version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/sqlscripts/oracle/VERSION.txt
+	@cp ./oracle/*.sql $(BUILD_DIR)/oracle
+	@cp  LICENSE $(BUILD_DIR)/oracle
+	echo "SQL Helper Scripts for Oracle Database version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/oracle/VERSION.txt
 	
 	@echo "=> Building SQL Helper Scripts for Microsoft SQL Server version $(VERSION)..."
 	python3 -c "import m2r; python_text = m2r.convert(open('mssql/README.md').read()); f = open('mssql/README.txt', 'w'); f.write(python_text); f.close()"
-	@mkdir -p $(BUILD_DIR)/sqlscripts/sqlserver
-	@cp mssql/*.sql $(BUILD_DIR)/sqlscripts/sqlserver
-	@cp mssql/README.txt $(BUILD_DIR)/sqlscripts/sqlserver
-	@cp LICENSE $(BUILD_DIR)/sqlscripts/sqlserver
-	@echo "SQL Helper Scripts for Microsoft SQL Server version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/sqlscripts/sqlserver/VERSION.txt
+	@mkdir -p $(BUILD_DIR)/sqlserver
+	@cp mssql/*.sql $(BUILD_DIR)/sqlserver
+	@cp mssql/README.txt $(BUILD_DIR)/sqlserver
+	@cp LICENSE $(BUILD_DIR)/sqlserver
+	@echo "SQL Helper Scripts for Microsoft SQL Server version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/sqlserver/VERSION.txt
 
 	@echo "=> Building SQL Helper Scripts for Postgresql version $(VERSION)..."
 	python3 -c "import m2r; python_text = m2r.convert(open('postgres/README.md').read()); f = open('postgres/README.txt', 'w'); f.write(python_text); f.close()"
-	@mkdir -p $(BUILD_DIR)/sqlscripts/postgres
-	@cp postgres/*.sql $(BUILD_DIR)/sqlscripts/postgres
-	@cp postgres/README.txt $(BUILD_DIR)/sqlscripts/postgres
-	@cp  LICENSE $(BUILD_DIR)/sqlscripts/postgres
-	@echo "SQL Helper Scripts for Postgres version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/sqlscripts/postgres/VERSION.txt
+	@mkdir -p $(BUILD_DIR)/postgres
+	@cp postgres/*.sql $(BUILD_DIR)/postgres
+	@cp postgres/README.txt $(BUILD_DIR)/postgres
+	@cp  LICENSE $(BUILD_DIR)/postgres
+	@echo "SQL Helper Scripts for Postgres version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/postgres/VERSION.txt
 
 	@make package-sqlscripts
 
@@ -87,16 +78,16 @@ package-sqlscripts:
 	@rm -f ./$(BUILD_DIR)/$(COLLECTOR_PACKAGE)*.zip
 
 	@echo  "=> Packaging SQL Scripts for Oracle..."
-	@echo "Zipping files in ./$(BUILD_DIR)/sqlscripts/oracle"
-	@cd $(BASE_DIR)/$(BUILD_DIR)/sqlscripts/oracle; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-oracle.zip  *
+	@echo "Zipping files in ./$(BUILD_DIR)/oracle"
+	@cd $(BASE_DIR)/$(BUILD_DIR)/oracle; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-oracle.zip  *
 
 	@echo  "=> Packaging SQL Scripts for Microsoft SQL Server..."
-	@echo "Zipping files in ./$(BUILD_DIR)/sqlscripts/sqlserver"
-	@cd $(BASE_DIR)/$(BUILD_DIR)/sqlscripts/sqlserver; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-sqlserver.zip  *
+	@echo "Zipping files in ./$(BUILD_DIR)/sqlserver"
+	@cd $(BASE_DIR)/$(BUILD_DIR)/sqlserver; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-sqlserver.zip  *
 	
 	@echo  "=> Packaging SQL Scripts for Postgres..."
-	@echo "Zipping files in ./$(BUILD_DIR)/sqlscripts/postgres"
-	@cd $(BASE_DIR)/$(BUILD_DIR)/sqlscripts/postgres; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-postgres.zip  *
+	@echo "Zipping files in ./$(BUILD_DIR)/postgres"
+	@cd $(BASE_DIR)/$(BUILD_DIR)/postgres; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-postgres.zip  *
 
 .PHONY: build
 build: build-sqlscripts        ## Build and package the collectors
@@ -134,6 +125,6 @@ docs:       ## generate HTML documentation and serve it to the browser
 pre-release:       ## bump the version and create the release tag
 	make gen-docs
 	make clean
-	./.venv/bin/bump2version $(increment)
+	.venv/bin/bump2version $(increment)
 	head .bumpversion.cfg | grep ^current_version
 	make build
