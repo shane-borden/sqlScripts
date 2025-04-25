@@ -1,9 +1,8 @@
-# Database Migration Assessment
+# Database Performance Scripts Collection
 
-## Moving Database Workloads to Google Cloud
+## Central collection of sql scripts that can help diagnose problems and expose metadata about various DBMS Products.
 
-* Get the recommended Google Cloud configuration your current Oracle and SQL Server environments.
-* Facts based approach to sizing that leverages metadata from your environment.
+* Collect performance and other metadata for your current PostgreSQL, Oracle and SQL Server environments.
 
 ## Quick Start
 
