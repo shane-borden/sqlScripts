@@ -133,6 +133,6 @@ ROUND((
             0.0
         ELSE
             sml.relpages::float / otta
-        END)::numeric, 1) > 10
+        END)::numeric, 1) > 0
 ORDER BY
     2,4,3 DESC;

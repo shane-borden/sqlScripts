@@ -66,7 +66,9 @@ build-sqlscripts: clean-sqlscripts      ## Build the collector SQL scripts.
 	python3 -c "import m2r; python_text = m2r.convert(open('postgres/README.md').read()); f = open('postgres/README.txt', 'w'); f.write(python_text); f.close()"
 	@mkdir -p $(BUILD_DIR)/postgres
 	@cp postgres/*.sql $(BUILD_DIR)/postgres
+	@cp postgres/.psqlrc $(BUILD_DIR)/postgres
 	@cp postgres/README.txt $(BUILD_DIR)/postgres
+	@cp postgres/README.md $(BUILD_DIR)/postgres
 	@cp  LICENSE $(BUILD_DIR)/postgres
 	@echo "SQL Helper Scripts for Postgres version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/postgres/VERSION.txt
 
