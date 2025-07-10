@@ -24,15 +24,8 @@ FROM
     pg_class c
 WHERE reloptions is NOT null)
 SELECT
-    now(),
+    --to_char(now(), 'YYYY-MM-DD HH:MI'),
     s.schemaname ||'.'|| s.relname as relname,
-    case
-      when avacenabled.value is not null
-        then avacenabled.value::text
-      when (select setting::text from pg_settings where name = 'autovacuum') = 'on'
-        then 'true'
-      else 'false'
-    end as autovac_enabled,
     n_live_tup live_tup,
     n_dead_tup dead_dup,
     n_tup_hot_upd hot_upd,
@@ -71,15 +64,22 @@ SELECT
       else ROUND((greatest(age(c.relfrozenxid),age(t.relfrozenxid))::numeric / (select setting::numeric from pg_settings where name = 'autovacuum_freeze_max_age') * 100),2) 
       end as avac_pct_frz,
     greatest(age(c.relfrozenxid),age(t.relfrozenxid)) max_txid_age,
-    to_char(last_vacuum, 'YYYY-MM-DD HH24:MI:SS') last_vac,
-    to_char(last_analyze, 'YYYY-MM-DD HH24:MI:SS') last_stats,
-    to_char(last_autovacuum, 'YYYY-MM-DD HH24:MI:SS') last_avac,
-    to_char(last_autoanalyze, 'YYYY-MM-DD HH24:MI:SS') last_astats,
+    to_char(last_vacuum, 'YYYY-MM-DD HH24:MI') last_vac,
+    to_char(last_analyze, 'YYYY-MM-DD HH24:MI') last_stats,
+    to_char(last_autovacuum, 'YYYY-MM-DD HH24:MI') last_avac,
+    to_char(last_autoanalyze, 'YYYY-MM-DD HH24:MI') last_astats,
     vacuum_count vac_cnt,
     analyze_count stats_cnt,
     autovacuum_count avac_cnt,
     autoanalyze_count astats_cnt,
-    c.reloptions
+    c.reloptions,
+    case
+      when avacenabled.value is not null
+        then avacenabled.value::text
+      when (select setting::text from pg_settings where name = 'autovacuum') = 'on'
+        then 'true'
+      else 'false'
+    end as autovac_enabled
 FROM
     pg_stat_all_tables s
 JOIN pg_class c ON (s.relid = c.oid)
@@ -96,15 +96,17 @@ WHERE
     s.relname IN (
         SELECT
             t.table_name
-        FROM
-            information_schema.tables t
-            JOIN pg_catalog.pg_class c ON (t.table_name = c.relname)
-            JOIN pg_catalog.pg_user u ON (c.relowner = u.usesysid)
+		FROM
+    		information_schema.tables t
+    		JOIN pg_catalog.pg_class c ON (t.table_name = c.relname)
+    		LEFT JOIN pg_catalog.pg_user u ON (c.relowner = u.usesysid)
         WHERE
             t.table_schema like '%'
-            AND u.usename like '%'
+            AND (u.usename like '%' OR u.usename is null)
             AND t.table_name like '%'
-            AND t.table_schema not in ('information_schema','pg_catalog'))
-    --AND n_dead_tup > 0
-ORDER BY
-    n_dead_tup;
+            AND t.table_schema not in ('information_schema','pg_catalog')
+            AND t.table_type not in ('VIEW')
+			AND t.table_catalog = current_database())
+    --AND n_dead_tup >= 0
+    --AND n_live_tup > 0
+ORDER BY 3;
