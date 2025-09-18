@@ -22,8 +22,8 @@ env.bak/
 venv.bak/
 .venv
 service_account.json
-site/
-site/*
+site/index.html
+site/sitemap.xml.gz
 
 # osx
 .ds_store
