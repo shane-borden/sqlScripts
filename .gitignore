@@ -22,8 +22,6 @@ env.bak/
 venv.bak/
 .venv
 service_account.json
-site/index.html
-site/sitemap.xml.gz
 
 # osx
 .ds_store
@@ -38,3 +36,5 @@ README.txt
 mssql/README.txt
 oracle/README.txt
 postgres/README.txt
+site/index.html
+site/sitemap.xml.gz
