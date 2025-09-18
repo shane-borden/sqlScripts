@@ -25,7 +25,7 @@ FROM
 WHERE reloptions is NOT null)
 SELECT
     --to_char(now(), 'YYYY-MM-DD HH:MI'),
-    s.schemaname ||'.'|| s.relname as relname,
+    current_database() ||'.'|| s.schemaname ||'.'|| s.relname as relname,
     n_live_tup live_tup,
     n_dead_tup dead_dup,
     n_tup_hot_upd hot_upd,
